@@ -1,5 +1,6 @@
 import time
 
+import openpyxl
 from selenium import webdriver
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
@@ -29,15 +30,21 @@ browser.execute_cdp_cmd(
 )
 browser.set_window_size(1200, 800)
 
-workbook = Workbook()
-worksheet = workbook.active
+# workbook = Workbook()
+# workbook.create_sheet(index=1, title="all")
+# workbook.create_sheet(index=1, title="300-500")
+# # workbook.create_sheet(index=1, title="400-500")
+# workbook.create_sheet(index=1, title="500-700")
+# # workbook.create_sheet(index=1, title="600-700")
+# workbook.create_sheet(index=1, title="700-900")
+
+workbook = openpyxl.load_workbook('D:\lc\python\爬虫\doda.xlsx')
 
 # 读取关键词列表的 Excel 文件
 keywords_df = pd.read_excel('D:\lc\python\爬虫\ITKeywords_cleaned.xlsx', header=None, names=['Keywords'])
 
-job_id_list = set()
-for page in range(5):
-    browser.get(f'https://doda.jp/DodaFront/View/JobSearchList/j_oc__03L/-preBtn__3/-page__{page}/?prsrt=1')
+def getData(url, skill_list, range_num):
+    browser.get(url)
     # 创建显示等待对象
     wait_obj = WebDriverWait(browser, 10)
     # 设置等待条件（等搜索结果的div出现）
@@ -48,40 +55,24 @@ for page in range(5):
             )
         )
     except TimeoutException:
-        # iframe = WebDriverWait(browser, 10).until(
-        #     expected_conditions.presence_of_all_elements_located(
-        #         (By.TAG_NAME, "iframe")
-        #     )
-        # )
         iframe = browser.find_element(By.TAG_NAME, "iframe")
         # 切换到 <iframe> 上下文
         browser.switch_to.frame(iframe)
 
         # 在 <iframe> 内嵌的文档中查找元素（这里以查找一个输入框为例）
         checkbox = browser.find_element(By.CSS_SELECTOR, ".ctp-checkbox-label input[type='checkbox']")
-        # checkbox.click()
-        # checkbox = WebDriverWait(iframe[0], 10).until(
-        #     expected_conditions.presence_of_all_elements_located(
-        #         (By.TAG_NAME, "input")
-        #     )
-        # )
-        # checkbox = browser.find_element(By.CSS_SELECTOR, ".ctp-checkbox-label input[type='checkbox']")
         time.sleep(3)
         ActionChains(browser).move_to_element(checkbox).click().perform()
-        # ActionChains(browser).drag_and_drop_by_offset(checkbox, 100, 0).perform()
 
-
-    skill_list = dict()
-    for i in range(50):
+    for j in range(range_num):
         try:
-            browser.get(f'https://doda.jp/DodaFront/View/JobSearchList/j_oc__03L/-preBtn__3/-page__{page}/?prsrt=1')
+            browser.get(url)
             jobs = browser.find_elements(By.CSS_SELECTOR, '.layoutList02')
-            job = jobs[i]
-            url = job.find_element(By.CSS_SELECTOR, '._JobListToDetail').get_attribute('href')
-            jd_url = url[0:-10] + '/-tab__jd/-fm__jobdetail/-mpsc_sid__10/'
+            job = jobs[j]
+            jd_url = job.find_element(By.CSS_SELECTOR, '._JobListToDetail').get_attribute('href')
+            jd_url = jd_url[0:-10] + '/-tab__jd/-fm__jobdetail/-mpsc_sid__10/'
             browser.get(jd_url)
 
-            # salary = browser.find_element(By.ID, 'salary').find_element()
             content = browser.find_element(By.ID, 'shtTabContent1')
             text = content.text
             for keyword in keywords_df['Keywords']:
@@ -99,9 +90,31 @@ for page in range(5):
         except Exception as e:
             print(e)
             continue
-    for key, value in skill_list.items():
-        worksheet.append([key, value])
+
+
+skill_list = dict()
+# 爬取全体职位
+# for page in range(3):
+#     getData(f'https://doda.jp/DodaFront/View/JobSearchList/j_oc__03L/-preBtn__3/-page__{page+1}/?prsrt=1', skill_list, 50)
+# worksheet = workbook.get_sheet_by_name("all")
+# for key, value in skill_list.items():
+#     worksheet.append([key, value])
+
+# for i in range(3, 8, 2):
+#     skill_list = dict()
+#     for page in range(3):
+#         getData(f'https://doda.jp/DodaFront/View/JobSearchList.action?pic=1&ds=0&oc=03L&so=50&preBtn=3&pf=0&ha={i}0%2C{i+2}0&tp=1&page={page+1}&prsrt=1', skill_list, 40)
+#     worksheet = workbook.get_sheet_by_name(f"{i}00-{i+2}00")
+#     for key, value in skill_list.items():
+#         worksheet.append([key, value])
+
+# 分职位薪资段爬取职位
+for page in range(5):
+    getData(f'https://doda.jp/DodaFront/View/JobSearchList.action?pic=1&ds=0&oc=03L&so=50&preBtn=3&pf=0&ha=70%2C90&tp=1&page={page+1}&prsrt=1', skill_list, 50)
+worksheet = workbook.get_sheet_by_name("700-900")
+for key, value in skill_list.items():
+    worksheet.append([key, value])
+
 
 workbook.save(r'D:\lc\python\爬虫\doda.xlsx')
 print('done')
-
