@@ -38,10 +38,10 @@ browser.set_window_size(1200, 800)
 # # workbook.create_sheet(index=1, title="600-700")
 # workbook.create_sheet(index=1, title="700-900")
 
-workbook = openpyxl.load_workbook('D:\lc\python\爬虫\doda.xlsx')
+workbook = openpyxl.load_workbook('D:\lc\python\爬虫\doda_0901.xlsx')
 
 # 读取关键词列表的 Excel 文件
-keywords_df = pd.read_excel('D:\lc\python\爬虫\ITKeywords_cleaned.xlsx', header=None, names=['Keywords'])
+keywords_df = pd.read_excel('ITKeywords_cleaned.xlsx', header=None, names=['Keywords'])
 
 def getData(url, skill_list, range_num):
     browser.get(url)
@@ -94,11 +94,11 @@ def getData(url, skill_list, range_num):
 
 skill_list = dict()
 # 爬取全体职位
-# for page in range(3):
-#     getData(f'https://doda.jp/DodaFront/View/JobSearchList/j_oc__03L/-preBtn__3/-page__{page+1}/?prsrt=1', skill_list, 50)
-# worksheet = workbook.get_sheet_by_name("all")
-# for key, value in skill_list.items():
-#     worksheet.append([key, value])
+for page in range(5):
+    getData(f'https://doda.jp/DodaFront/View/JobSearchList/j_oc__03L/-preBtn__3/-page__{page+1}/?prsrt=1', skill_list, 50)
+worksheet = workbook["all"]
+for key, value in skill_list.items():
+    worksheet.append([key, value])
 
 # for i in range(3, 8, 2):
 #     skill_list = dict()
@@ -109,12 +109,12 @@ skill_list = dict()
 #         worksheet.append([key, value])
 
 # 分职位薪资段爬取职位
-for page in range(5):
-    getData(f'https://doda.jp/DodaFront/View/JobSearchList.action?pic=1&ds=0&oc=03L&so=50&preBtn=3&pf=0&ha=70%2C90&tp=1&page={page+1}&prsrt=1', skill_list, 50)
-worksheet = workbook.get_sheet_by_name("700-900")
-for key, value in skill_list.items():
-    worksheet.append([key, value])
+# for page in range(5):
+#     getData(f'https://doda.jp/DodaFront/View/JobSearchList.action?pic=1&ds=0&oc=03L&so=50&preBtn=3&pf=0&ha=70%2C90&tp=1&page={page+1}&prsrt=1', skill_list, 50)
+# worksheet = workbook.get_sheet_by_name("700-900")
+# for key, value in skill_list.items():
+#     worksheet.append([key, value])
 
 
-workbook.save(r'D:\lc\python\爬虫\doda.xlsx')
+workbook.save(r'D:\lc\python\爬虫\doda_0901.xlsx')
 print('done')
